@@ -1,0 +1,22 @@
+<template>
+    <lightning-card title="Rastreo y Ubicación en Mapa">
+        <div class="slds-p-around_medium">
+            <p><b>Latitud:</b> {lat}</p>
+            <p><b>Longitud:</b> {lon}</p>
+            <p><b>Última actualización:</b> {lastUpdated}</p>
+            <p><b>Ubicaciónes:</b> {locationName}</p>
+            <lightning-button label="Guardar Ubicación Manualmente" onclick={guardarUbicacionManual} class="slds-m-top_medium"></lightning-button>
+
+
+        </div>
+
+        <div class="slds-p-around_medium">
+            <lightning-map
+                map-markers={mapMarkers}
+                zoom-level="15"
+                center={center}
+            >
+            </lightning-map>
+        </div>
+    </lightning-card>
+</template>
