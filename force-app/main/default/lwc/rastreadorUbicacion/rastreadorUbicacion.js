@@ -1,5 +1,6 @@
 import { LightningElement, track } from 'lwc';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
+import obtenerDireccionDesdeCoordenadas from '@salesforce/apex/UbicacionController.obtenerDireccionDesdeCoordenadas';
 
 export default class UbicacionRastreadorGerente extends LightningElement {
     subscription = {};
@@ -43,32 +44,66 @@ export default class UbicacionRastreadorGerente extends LightningElement {
         });
     }
 
-    actualizarMarcadores(usuarioId, usuarioNombre, lat, lon, fecha) {
-        this.usuariosMapa.set(usuarioId, {
-            location: {
-                Latitude: lat,
-                Longitude: lon
-            },
-            title: `Vendedor: ${usuarioNombre}`, // Usamos el nombre aquí
-            description: `Última actualización: ${new Date(fecha).toLocaleString()}`
-        });
+   async actualizarMarcadores(usuarioId, usuarioNombre, lat, lon, fecha) {
+    const marker = {
+        location: {
+            Latitude: lat,
+            Longitude: lon
+        },
+        title: `Vendedor: ${usuarioNombre}`,
+        description: `Última actualización: ${new Date(fecha).toLocaleString()}`
+    };
 
-        this.mapMarkers = Array.from(this.usuariosMapa.values()).filter(marker => marker && marker.location);
-
-        // Calcular centro promedio
-        const total = this.mapMarkers.length;
-        if (total > 0) {
-            const avgLat = this.mapMarkers.reduce((sum, m) => sum + m.location.Latitude, 0) / total;
-            const avgLon = this.mapMarkers.reduce((sum, m) => sum + m.location.Longitude, 0) / total;
-
-            this.center = { latitude: avgLat, longitude: avgLon };
+    let direccion = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
+    try {
+        const direccionObtenida = await obtenerDireccionDesdeCoordenadas({ lat, lon });
+        if (direccionObtenida) {
+            direccion = direccionObtenida;
         }
+    } catch (error) {
+        console.error('Error al obtener dirección desde Apex:', error);
     }
 
+    this.usuariosMapa.set(usuarioId, {
+        nombre: usuarioNombre,
+        ubicacion: direccion,
+        fecha: new Date(fecha).toLocaleString(),
+        marker
+    });
+
+    // Actualizar marcadores del mapa
+    this.mapMarkers = Array.from(this.usuariosMapa.values()).map(u => u.marker);
+
+    // Actualizar tabla
+    this.usuarios = Array.from(this.usuariosMapa.entries()).map(([id, u]) => ({
+        id,
+        nombre: u.nombre,
+        ubicacion: u.ubicacion,
+        fecha: u.fecha
+    }));
+
+    // Calcular centro del mapa
+    const total = this.mapMarkers.length;
+    if (total > 0) {
+        const avgLat = this.mapMarkers.reduce((sum, m) => sum + m.location.Latitude, 0) / total;
+        const avgLon = this.mapMarkers.reduce((sum, m) => sum + m.location.Longitude, 0) / total;
+
+        this.center = { latitude: avgLat, longitude: avgLon };
+    }
+}
     handleUnsubscribe() {
         unsubscribe(this.subscription, response => {
             console.log('Desuscrito de ' + this.channelName);
         });
     }
+async obtenerNombreUbicacion(lat, lon) {
+    try {
+        const direccion = await obtenerDireccionDesdeCoordenadas({ lat, lon });
+        return direccion;
+    } catch (error) {
+        console.error('Error al obtener dirección desde Apex:', error);
+        return 'Ubicación no disponible';
+    }
+}
 
 }

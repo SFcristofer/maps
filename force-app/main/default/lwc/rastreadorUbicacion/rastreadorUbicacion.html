@@ -1,10 +1,46 @@
 <template>
     <lightning-card title="Ubicaciones de Vendedores">
-        <lightning-map
-            map-markers={mapMarkers}
-            center={center}
-            zoom-level="10"
-            list-view
-        ></lightning-map>
+        <div class="container">
+            <!-- Contenedor de tabla y mapa en fila -->
+            <div class="layout-horizontal">
+                <!-- Tabla de usuarios conectados -->
+                <div class="user-table">
+                    <h2 class="section-title">Usuarios Conectados</h2>
+                    <template if:true={usuarios}>
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col"><div class="slds-truncate">Nombre</div></th>
+                                    <th scope="col"><div class="slds-truncate">Última Ubicación</div></th>
+                                    <th scope="col"><div class="slds-truncate">Fecha</div></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={usuarios} for:item="usuario">
+                                    <tr key={usuario.id}>
+                                        <td><div class="slds-truncate">{usuario.nombre}</div></td>
+                                        <td><div class="slds-truncate">{usuario.ubicacion}</div></td>
+                                        <td><div class="slds-truncate">{usuario.fecha}</div></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </template>
+                    <template if:false={usuarios}>
+                        <p>No hay usuarios conectados aún.</p>
+                    </template>
+                </div>
+
+                <!-- Mapa -->
+                <div class="map-container">
+                    <lightning-map
+                        map-markers={mapMarkers}
+                        center={center}
+                        zoom-level="10"
+                        list-view
+                    ></lightning-map>
+                </div>
+            </div>
+        </div>
     </lightning-card>
 </template>
